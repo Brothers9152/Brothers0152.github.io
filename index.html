@@ -1,1 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Red Star OS – Securing an Unsecure Environment</title>
+<style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; max-width: 900px; margin: auto; padding: 20px; }
+    h1, h2, h3 { color: #333; }
+    code { background: #eee; padding: 2px 4px; border-radius: 4px; }
+    pre { background: #eee; padding: 10px; border-radius: 6px; overflow-x: auto; }
+    ul { margin-top: 0; }
+</style>
+</head>
+<body>
+
+<h1>Red Star OS</h1>
+<h2>“Securing an Unsecure Environment”</h2>
+
+<h2>Table of Contents</h2>
+<ul>
+    <li>Mission Statement</li>
+    <li>Why Is the OS Set Up This Way?</li>
+    <li>Key Systems and Programs Causing Safety Risks</li>
+    <li>How to Download and Set Up the OS</li>
+    <li>Guide to Securing the System</li>
+    <li>How to Download Programs</li>
+    <li>Conclusion and Sources</li>
+</ul>
+
+<h2>Mission Statement</h2>
+<p>The objective of this project is to take an inherently unsafe environment and secure it for commercial use.</p>
+
+<h2>Why Is the OS Set Up This Way?</h2>
+<p>Red Star OS is intentionally designed to control information:</p>
+<ul>
+    <li>It blocks foreign media, news, and software.</li>
+    <li>Its macOS-like interface is used to project modernity and prestige.</li>
+    <li>The OS includes built-in surveillance tracking user activity.</li>
+    <li>It reinforces isolation by restricting all tools to state-approved ones.</li>
+    <li>It aligns with North Korea’s ideology of self-reliance (Juche).</li>
+</ul>
+
+<h2>Key Systems and Programs</h2>
+
+<h3>IPTables</h3>
+<p>A firewall configured to block global internet access, prevent VPNs, restrict apps, and force traffic through government servers.</p>
+<p><strong>Why this matters:</strong> IPTables functions as a political firewall enabling censorship and monitoring.</p>
+
+<h3>SELinux</h3>
+<p>Locks down system files and protects government-monitoring tools.</p>
+<p><strong>Why this matters:</strong> SELinux enforces control and prevents system modification.</p>
+
+<h3>securityd</h3>
+<p>A daemon that reboots the system when protected files change.</p>
+<p><strong>Why this matters:</strong> This indicates constant system surveillance.</p>
+
+<h3>rtscan</h3>
+<p>A kernel module monitoring system resources for tampering.</p>
+<p><strong>Why this matters:</strong> Reduces privacy and blocks user modifications.</p>
+
+<h3>scnprc &amp; opprc</h3>
+<p>Hidden monitoring daemons running by default.</p>
+
+<h3>libos.so.0.0.0</h3>
+<p>A core system file enforcing monitoring and reboot protections.</p>
+
+<h3>Startup &amp; Init Config Files</h3>
+<p>Files such as <code>/usr/share/autostart/scnprc.desktop</code> automatically restart monitoring services on boot.</p>
+
+<h1>Installing Red Star OS in VMware Workstation Pro</h1>
+
+<h3>Requirements</h3>
+<ul>
+<li>VMware Workstation Pro</li>
+<li>Red Star OS ISO</li>
+<li>2–4 GB RAM</li>
+<li>20 GB disk</li>
+<li>CPU virtualization enabled</li>
+</ul>
+
+<h3>1. Create a New VM</h3>
+<p>Open VMware → Create a New Virtual Machine.</p>
+
+<h3>2. Setup Type</h3>
+<p>Select <strong>Custom</strong>.</p>
+
+<h3>3. Select ISO</h3>
+<p>Load the ISO. If prompted, choose <strong>Linux → Other Linux 4.x kernel 64-bit</strong>.</p>
+
+<h3>4. Name the VM</h3>
+<ul>
+<li>Name: <strong>Red Star OS</strong></li>
+<li>Type: <strong>Linux Fedora 64-bit</strong></li>
+</ul>
+
+<h3>5. VM Settings</h3>
+<ul>
+<li><strong>Memory:</strong> 2–4 GB</li>
+<li><strong>CPU:</strong> 2 cores</li>
+<li><strong>Network:</strong> Host-Only (safer)</li>
+<li><strong>I/O Controller:</strong> LSI Logic</li>
+<li><strong>Disk Type:</strong> IDE → 20 GB → single file</li>
+</ul>
+
+<h2>Securing the System</h2>
+
+<h3>Set Up Root User</h3>
+<pre>su</pre>
+
+<h3>Change Language to English (Optional)</h3>
+<pre>sed -i 's/ko_KP/en_US/g' /etc/sysconfig/i18n /usr/share/config/kdeglobals
+reboot</pre>
+
+<h3>Remove IPTables</h3>
+<pre>rm /etc/sysconfig/iptables</pre>
+
+<h3>Disable SELinux</h3>
+<pre>vi /boot/grub/grub.conf</pre>
+<p>Add to the kernel line:</p>
+<pre>selinux=0</pre>
+<p>Verify:</p>
+<pre>getenforce</pre>
+
+<h3>Disable rtscan</h3>
+<pre>
+python
+>>> import fcntl
+>>> fcntl.ioctl(open('/dev/res','wb'),29187)
+</pre>
+
+<h3>Kill Monitoring Services</h3>
+<pre>
+killall scnprc
+killall opprc
+</pre>
+
+<h2>Do NOT Reboot Until libos Is Replaced</h2>
+
+<h3>Compile and Replace libos.so.0.0.0</h3>
+<pre>
+gcc -c -Wall -Werror -fpic libos.c
+gcc -shared -o libos.so.0.0.0 libos.o
+cp ./libos.so.0.0.0 /usr/lib/libos.so.0.0.0
+chown root:root /usr/lib/libos.so.0.0.0
+chmod 755 /usr/lib/libos.so.0.0.0
+ln -sf /usr/lib/libos.so.0.0.0 /usr/lib/libos.so.0
+</pre>
+
+<h3>Reboot and Remove Startup Files</h3>
+<pre>
+rm -f /usr/share/autostart/scnprc.desktop
+rm -f /etc/init/ctguard.conf
+</pre>
+
+<h2>Install Programs</h2>
+<pre>
+cd /path/to/program
+wine yourfile.exe
+</pre>
+
+<h2>Conclusion</h2>
+<p>
+Red Star OS is difficult to modify due to limited documentation and protective systems designed to reboot or break when monitored components are altered. Securing it requires following precise steps and replacing files carefully.
+</p>
+
+<h2>Sources</h2>
+<ul>
+<li><a href="https://github.com/takeshixx/redstar-tools/tree/master">https://github.com/takeshixx/redstar-tools/tree/master</a></li>
+<li><a href="https://www.youtube.com/watch?v=G9upnwcGyK8">YouTube Guide 1</a></li>
+<li><a href="https://www.youtube.com/watch?v=rMNpA8_byYo">YouTube Guide 2</a></li>
+</ul>
+
+</body>
+</html>
 
